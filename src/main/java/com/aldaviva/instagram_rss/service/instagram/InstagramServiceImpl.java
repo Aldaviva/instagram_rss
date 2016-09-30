@@ -15,7 +15,6 @@ import javax.inject.Provider;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ public class InstagramServiceImpl implements InstagramService {
 	public InstagramUser getUser(final String username) throws InstagramException {
 		LOGGER.trace("Requesting user profile for {}...", username);
 		try {
-			final String response = target()
+			final String response = httpClient.get().target(BASE_URI)
 			    .path(username)
 			    .request()
 			    .get(String.class);
@@ -105,17 +104,6 @@ public class InstagramServiceImpl implements InstagramService {
 		}
 
 		return post;
-	}
-
-	//	public List<InstagramPost> listInstagramPosts(final InstagramUser user) {
-	//
-	//		try {
-	//			target().path("query");
-	//		}
-	//	}
-
-	private WebTarget target() {
-		return httpClient.get().target(BASE_URI);
 	}
 
 }
