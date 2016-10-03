@@ -4,7 +4,7 @@ Convert an Instagram profile into an RSS feed.
 ## Prerequisites
 - Java ≥ 7
 - Servlet container like Tomcat ≥ 7, Jetty ≥ 8, or similar
-- Maven 3 if you want to compile it yourself
+- Maven 3
 
 ## Compiling
     $ git clone https://github.com/Aldaviva/instagram_rss.git
