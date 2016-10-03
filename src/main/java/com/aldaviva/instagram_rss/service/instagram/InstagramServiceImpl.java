@@ -73,6 +73,10 @@ public class InstagramServiceImpl implements InstagramService {
 		user.setUserId(rawUser.path("id").asLong());
 		user.setUsername(rawUser.path("username").textValue());
 
+		if(rawUser.path("is_private").booleanValue()) {
+			throw new InstagramException.PrivateProfile(user.getUsername(), "Unable to retrieve profile of private user " + user.getUsername());
+		}
+
 		try {
 			user.setProfilePicture(new URI(rawUser.path("profile_pic_url_hd").textValue()));
 		} catch (final URISyntaxException e) {

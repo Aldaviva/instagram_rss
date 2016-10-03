@@ -1,6 +1,7 @@
 package com.aldaviva.instagram_rss.common.exceptions;
 
 import com.aldaviva.instagram_rss.common.exceptions.InstagramException.NoSuchUser;
+import com.aldaviva.instagram_rss.common.exceptions.InstagramException.PrivateProfile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,9 @@ public class ApiExceptionMapper implements ExceptionMapper<InstagramException> {
 			throw exception;
 		} catch (final NoSuchUser e) {
 			response = Response.status(Status.NOT_FOUND);
+			responseBody.put("username", e.username);
+		} catch (final PrivateProfile e) {
+			response = Response.status(Status.FORBIDDEN);
 			responseBody.put("username", e.username);
 		} catch (final InstagramException e) {
 			response = Response.status(Status.BAD_GATEWAY);
