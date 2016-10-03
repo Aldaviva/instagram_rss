@@ -16,4 +16,16 @@ public class InstagramException extends Exception {
 		super(message, cause);
 	}
 
+	public static class NoSuchUser extends InstagramException {
+
+		public String username;
+
+		private static final long serialVersionUID = 1L;
+
+		public NoSuchUser(final String username, final String message, final Throwable cause) {
+			super(message, cause);
+			this.username = username;
+		}
+	}
+
 }

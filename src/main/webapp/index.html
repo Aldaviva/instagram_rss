@@ -1,11 +1,32 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title>Instagram RSS</title>
-	</head>
+<head>
+<meta charset="utf-8" />
+<title>Instagram RSS</title>
+<link href="styles/index.css" rel="stylesheet" type="text/css" />
+</head>
 
-	<body>
-		<h1>Instagram RSS</h1>
-	</body>
+<body>
+	<h1>Instagram RSS</h1>
+
+	<section>
+		<p>Subscribe to an RSS feed for an Instagram user.</p>
+
+		<form>
+			<label>Instagram username or profile URL: <input type="text"
+				name="usernameOrUrl" value="https://www.instagram.com/" />
+			</label> <input type="submit" value="Get RSS feed" />
+		</form>
+		<footer>
+			by <a href="https://twitter.com/Aldaviva" target="_blank">Ben
+				Hutchison</a>
+		</footer>
+	</section>
+
+
+	<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"
+		integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+		crossorigin="anonymous"></script>
+	<script src="scripts/index.js"></script>
+</body>
 </html>

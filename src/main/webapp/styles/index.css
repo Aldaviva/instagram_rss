@@ -1,0 +1,43 @@
+body {
+	margin: 0;
+}
+
+h1 {
+	margin: 0.5em;
+	font-size: 2rem;
+}
+
+label, input {
+	display: block;
+}
+
+section {
+	margin: 0 2em;
+}
+
+p {
+	font-style: italic;
+	font-size: 0.8rem;
+	opacity: 0.8;
+	margin-bottom: 2em;
+}
+
+input[name=usernameOrUrl] {
+	width: 30em;
+}
+
+input[type=submit] {
+	margin-top: 1em;
+}
+
+footer {
+	font-size: 0.6rem;
+	font-style: italic;
+	opacity: 0.6;
+	
+	border-top: 1px solid rgba(0,0,0,0.4);
+	padding-top: 0.5em;
+	min-width: 30em;
+	margin-top: 6em;
+	display: inline-block;
+}

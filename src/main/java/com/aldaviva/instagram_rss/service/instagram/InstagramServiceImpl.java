@@ -15,6 +15,7 @@ import javax.inject.Provider;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response.Status;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,12 @@ public class InstagramServiceImpl implements InstagramService {
 				throw new InstagramException("No sharedData returned for user " + username);
 			}
 
-		} catch (WebApplicationException | ProcessingException e) {
+		} catch (final WebApplicationException e) {
+			if(e.getResponse().getStatus() == Status.NOT_FOUND.getStatusCode()) {
+				throw new InstagramException.NoSuchUser(username, "There is no Instagram user with the username " + username, e);
+			}
+			throw new InstagramException("Could not get shared data for user " + username, e);
+		} catch (final ProcessingException e) {
 			throw new InstagramException("Could not get shared data for user " + username, e);
 		} catch (final IOException e) {
 			throw new InstagramException("Failed to parse shared data user " + username, e);
