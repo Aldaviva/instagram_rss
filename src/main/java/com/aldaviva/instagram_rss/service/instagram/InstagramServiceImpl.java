@@ -1,8 +1,10 @@
 package com.aldaviva.instagram_rss.service.instagram;
 
 import com.aldaviva.instagram_rss.common.exceptions.InstagramException;
+import com.aldaviva.instagram_rss.data.InstagramPhotoPost;
 import com.aldaviva.instagram_rss.data.InstagramPost;
 import com.aldaviva.instagram_rss.data.InstagramUser;
+import com.aldaviva.instagram_rss.data.InstagramVideoPost;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -96,8 +98,18 @@ public class InstagramServiceImpl implements InstagramService {
 	}
 
 	protected InstagramPost convertMediaNodeToPost(final JsonNode rawPost, final InstagramUser user) throws InstagramException {
-		final InstagramPost post = new InstagramPost();
+		InstagramPost post;
+		if(rawPost.path("is_video").booleanValue()) {
+			post = populatePostDetails(rawPost, new InstagramVideoPost(), user);
+		} else {
+			post = populatePostDetails(rawPost, new InstagramPhotoPost(), user);
+		}
 
+		return post;
+	}
+
+	protected InstagramPhotoPost populatePostDetails(final JsonNode rawPost, final InstagramPhotoPost post, final InstagramUser user)
+	    throws InstagramException {
 		post.setCaption(rawPost.path("caption").textValue());
 		post.setDatePosted(new DateTime(rawPost.path("date").asLong() * 1000));
 		post.setHeight(rawPost.path("dimensions").path("height").intValue());
@@ -111,6 +123,29 @@ public class InstagramServiceImpl implements InstagramService {
 			post.setThumbnailSource(new URI(rawPost.path("thumbnail_src").textValue()));
 		} catch (final URISyntaxException e) {
 			throw new InstagramException("Illegal display or thumbnail URL for " + user.getUsername() + "'s post " + post.getPostUri(), e);
+		}
+
+		return post;
+	}
+
+	protected InstagramVideoPost populatePostDetails(final JsonNode rawPost, final InstagramVideoPost post, final InstagramUser user)
+	    throws InstagramException {
+		populatePostDetails(rawPost, (InstagramPhotoPost) post, user);
+
+		JsonNode videoDetails = null;
+		try {
+			videoDetails = httpClient.get().target(BASE_URI)
+			    .path("p")
+			    .path(post.getCode())
+			    .queryParam("__a", 1) //otherwise Instagram returns HTML
+			    .request()
+			    .get(JsonNode.class);
+
+			post.setVideoUri(new URI(videoDetails.path("media").path("video_url").textValue()));
+		} catch (final URISyntaxException e) {
+			throw new InstagramException("Illegal video URL for " + user.getUsername() + "'s post " + post.getPostUri(), e);
+		} catch (WebApplicationException | ProcessingException e) {
+			throw new InstagramException("Could not get video info for user " + user.getUsername(), e);
 		}
 
 		return post;

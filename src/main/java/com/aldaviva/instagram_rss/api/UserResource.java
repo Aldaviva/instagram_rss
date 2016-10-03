@@ -21,7 +21,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.jdom2.Element;
 import org.jdom2.output.XMLOutputter;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,15 +79,7 @@ public class UserResource {
 			item.getModules().add(dc);
 
 			final Description description = new Description();
-			final Element div = new Element("div");
-			final Element img = new Element("img");
-			div.addContent(img);
-			img.setAttribute("src", post.getDisplaySource().toString());
-			final Element p = new Element("p");
-			p.setText(post.getCaption());
-			div.addContent(p);
-			final String imgStr = XML_OUTPUTTER.outputString(div);
-			description.setValue(imgStr);
+			description.setValue(XML_OUTPUTTER.outputString(post.toHtmlElement()));
 			item.setDescription(description);
 
 			final Guid guid = new Guid();

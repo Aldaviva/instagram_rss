@@ -1,5 +1,7 @@
 package com.aldaviva.instagram_rss.service.instagram;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.*;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
@@ -7,6 +9,7 @@ import com.aldaviva.instagram_rss.common.exceptions.InstagramException;
 import com.aldaviva.instagram_rss.config.ApplicationConfig;
 import com.aldaviva.instagram_rss.data.InstagramPost;
 import com.aldaviva.instagram_rss.data.InstagramUser;
+import com.aldaviva.instagram_rss.data.InstagramVideoPost;
 
 import vc.bjn.catalyst.test.jersey.client.MockClientProvider;
 import vc.bjn.catalyst.test.jersey.client.TestBuilder;
@@ -93,5 +96,28 @@ public class InstagramServiceTest {
 
 		verify(request).get(String.class);
 		verify(request).requested("https://www.instagram.com/mad.dangerous");
+	}
+
+	@Test
+	public void convertVideoPost() throws JsonProcessingException, IOException, InstagramException {
+		final JsonNode sharedData = objectMapper.readTree(Resources.getResource("json/user_toothpix.json"));
+		final JsonNode videoData = objectMapper.readTree(Resources.getResource("json/video_toothpix0.json"));
+
+		final TestBuilder request = mock(TestBuilder.class);
+		when(request.get(JsonNode.class)).thenReturn(videoData);
+		for(int i = 0; i < 12; i++) {
+			//return the same JSON response for all 12 requests
+			clientProvider.enqueueMockBuilder(request);
+		}
+
+		final InstagramUser user = instagramService.convertSharedDataToUser(sharedData);
+		assertNotNull(user, "converted user");
+
+		final List<InstagramPost> actual = user.getPosts();
+		assertEquals(actual.size(), 12, "number of posts");
+
+		final InstagramPost first = actual.get(0);
+		assertThat(first, instanceOf(InstagramVideoPost.class));
+		assertNotNull(((InstagramVideoPost) first).getVideoUri());
 	}
 }
