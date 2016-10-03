@@ -57,15 +57,13 @@ public class TestJerseyWebTarget extends JerseyWebTarget {
 			    + "testWebTargetFactory.enqueueMockBuilder(mockRequest) for " + uri + "?");
 		}
 
-		when(builder.header(anyString(), any())).thenAnswer(new Answer<Builder>() {
-
+		doAnswer(new Answer<Builder>() {
 			@Override
 			public Builder answer(final InvocationOnMock invocation) throws Throwable {
 				builder.headerAdded(invocation.getArgumentAt(0, String.class), invocation.getArgumentAt(1, Object.class));
 				return builder;
 			}
-
-		});
+		}).when(builder).header(anyString(), any());
 
 		builder.requested(uri);
 		LOGGER.trace(uri);
