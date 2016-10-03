@@ -1,6 +1,6 @@
 (function(){
 	
-	var PROFILE_URL_PATTERN = /^https?:\/\/(?:www\.)?instagram\.com\/(.*)(?:\/|$)/i;
+	var PROFILE_URL_PATTERN = /^https?:\/\/(?:www\.)?instagram\.com\/(.*?)(?:\/|$)/i;
 	
 	var form = $('form');
 	var usernameOrUrlEl = $('input[name=usernameOrUrl]');
