@@ -80,10 +80,10 @@ public class InstagramServiceImpl implements InstagramService {
 		}
 
 		try {
-			user.setProfilePicture(new URI(rawUser.path("profile_pic_url_hd").textValue()));
+			user.setProfilePicture(new URI(rawUser.path("profile_pic_url_hd").asText(":malformed_url")));
 		} catch (final URISyntaxException e) {
 			try {
-				user.setProfilePicture(new URI(rawUser.path("profile_pic_url").textValue()));
+				user.setProfilePicture(new URI(rawUser.path("profile_pic_url").asText(":malformed_url")));
 			} catch (final URISyntaxException e1) {
 				LOGGER.warn("Invalid profile picture URL for user {}: {}", user.getUsername(), rawUser.path("profile_pic_url_hd").textValue());
 			}
