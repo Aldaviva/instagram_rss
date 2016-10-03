@@ -5,6 +5,7 @@ import com.aldaviva.instagram_rss.data.InstagramPost;
 import com.aldaviva.instagram_rss.data.InstagramUser;
 import com.aldaviva.instagram_rss.service.instagram.InstagramService;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Ordering;
 import com.rometools.rome.feed.module.DCModule;
 import com.rometools.rome.feed.module.DCModuleImpl;
@@ -50,7 +51,7 @@ public class UserResource {
 		channel.setEncoding(StandardCharsets.UTF_8.name());
 
 		final InstagramUser user = getUserProfile(username);
-		channel.setDescription(user.getBiography());
+		channel.setDescription(MoreObjects.firstNonNull(user.getBiography(), user.getFullName() + " on Instagram"));
 
 		channel.setLink(user.getProfileUri().toString());
 		channel.setTitle(user.getFullName());
