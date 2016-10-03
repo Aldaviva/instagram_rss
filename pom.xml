@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.aldaviva</groupId>
 	<artifactId>instagram_rss</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>Instagram RSS</name>
 	<description>Convert an Instagram profile into an RSS feed.</description>
 	<packaging>war</packaging>
