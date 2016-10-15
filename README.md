@@ -12,7 +12,7 @@ Convert an Instagram profile into an RSS feed.
     $ mvn package
     
 ## Running
-1. Copy `target\instagram_rss.war` to your servlet container's `webapps` directory, or however your server deploys WARs.
+1. Copy `instagram_rss/target/instagram_rss.war` to your servlet container's `webapps` directory, or however your server deploys WARs.
 
 ## Usage
 1. Go to `http://127.0.0.1:8080/instagram_rss` in your browser (use your server's IP address).
