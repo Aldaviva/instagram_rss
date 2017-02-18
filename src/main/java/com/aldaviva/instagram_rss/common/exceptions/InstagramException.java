@@ -8,10 +8,6 @@ public class InstagramException extends Exception {
 		super(message);
 	}
 
-	public InstagramException(final Throwable cause) {
-		super(cause);
-	}
-
 	public InstagramException(final String message, final Throwable cause) {
 		super(message, cause);
 	}

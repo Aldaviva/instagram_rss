@@ -21,33 +21,30 @@ import javax.ws.rs.ext.Provider;
 @Produces("application/rss+xml")
 public class ChannelWriter implements MessageBodyWriter<Channel> {
 
-	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ChannelWriter.class);
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ChannelWriter.class);
 
-	@Override
-	public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-		return Channel.class.isAssignableFrom(type);
-	}
+    @Override
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+        return Channel.class.isAssignableFrom(type);
+    }
 
-	@Override
-	public long getSize(final Channel t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-		return -1;
-	}
+    @Override
+    public long getSize(final Channel t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+        return -1;
+    }
 
-	@Override
-	public void writeTo(
-	    final Channel t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType,
-	    final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    @Override
+    public void writeTo(final Channel t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+        final WireFeedOutput wireFeedOutput = new WireFeedOutput();
+        final Charset channelCharset = t.getEncoding() != null ? Charset.forName(t.getEncoding()) : StandardCharsets.UTF_8;
 
-		final WireFeedOutput wireFeedOutput = new WireFeedOutput();
-		final Charset channelCharset = t.getEncoding() != null ? Charset.forName(t.getEncoding()) : StandardCharsets.UTF_8;
-
-		final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(entityStream, channelCharset);
-		try {
-			wireFeedOutput.output(t, outputStreamWriter);
-		} catch (final IllegalArgumentException | FeedException e) {
-			LOGGER.error("Failed to serialize RSS channel to XML", e);
-			throw new WebApplicationException("Failed to serialize RSS channel to XML", e, 500);
-		}
-	}
+        final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(entityStream, channelCharset);
+        try {
+            wireFeedOutput.output(t, outputStreamWriter);
+        } catch (final IllegalArgumentException | FeedException e) {
+            LOGGER.error("Failed to serialize RSS channel to XML", e);
+            throw new WebApplicationException("Failed to serialize RSS channel to XML", e, 500);
+        }
+    }
 
 }

@@ -19,7 +19,7 @@ public class SpringConfig implements WebApplicationInitializer {
 	private static Logger LOGGER;
 	private static AnnotationConfigWebApplicationContext context;
 
-	static final String PACKAGE_SCAN = "com.aldaviva.instagram_rss";
+	public static final String PACKAGE_SCAN = "com.aldaviva.instagram_rss";
 
 	public static final String ENV = "env";
 	public static final String ENV_PROD = "prod";
@@ -29,9 +29,17 @@ public class SpringConfig implements WebApplicationInitializer {
 
 	@Override
 	public void onStartup(final ServletContext servletContext) throws ServletException {
-		initLogging();
+		context = initSpring();
+		context.scan(PACKAGE_SCAN);
 
 		servletContext.setInitParameter("contextConfigLocation", ""); //prevent Jersey from also initializing Spring
+		servletContext.addListener(new ContextLoaderListener(context));
+
+		LOGGER.debug("Spring initialized");
+	}
+
+	public AnnotationConfigWebApplicationContext initSpring(){
+		initLogging();
 
 		context = new AnnotationConfigWebApplicationContext();
 
@@ -39,10 +47,7 @@ public class SpringConfig implements WebApplicationInitializer {
 			context.getEnvironment().setActiveProfiles(PROFILE_TEST);
 		}
 
-		context.scan(PACKAGE_SCAN);
-		servletContext.addListener(new ContextLoaderListener(context));
-
-		LOGGER.debug("Spring initialized");
+		return context;
 	}
 
 	private void initLogging() {

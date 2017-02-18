@@ -32,74 +32,75 @@ import org.springframework.stereotype.Component;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
-	@Autowired private InstagramService instagramService;
+    @Autowired private InstagramService instagramService;
 
-	private static final XMLOutputter XML_OUTPUTTER = new XMLOutputter();
+    private static final XMLOutputter XML_OUTPUTTER = new XMLOutputter();
 
-	@GET
-	@Path("{username}")
-	public InstagramUser getUserProfile(@PathParam("username") final String username) throws InstagramException {
-		return instagramService.getUser(username);
-	}
+    @GET
+    @Path("{username}")
+    public InstagramUser getUserProfile(@PathParam("username") final String username) throws InstagramException {
+        return instagramService.getUser(username);
+    }
 
-	@GET
-	@Path("{username}/rss")
-	@Produces("application/rss+xml")
-	public Channel getUserProfileRssChannel(@PathParam("username") final String username) throws InstagramException {
-		final Channel channel = new Channel("rss_2.0");
-		channel.setEncoding(StandardCharsets.UTF_8.name());
+    @GET
+    @Path("{username}/rss")
+    @Produces("application/rss+xml")
+    public Channel getUserProfileRssChannel(@PathParam("username") final String username) throws InstagramException {
+        final Channel channel = new Channel("rss_2.0");
+        channel.setEncoding(StandardCharsets.UTF_8.name());
 
-		final InstagramUser user = getUserProfile(username);
-		channel.setDescription(MoreObjects.firstNonNull(user.getBiography(), user.getFullName() + " on Instagram"));
+        final InstagramUser user = getUserProfile(username);
+        final String fullName =  MoreObjects.firstNonNull(user.getFullName(), user.getUsername());
+        channel.setDescription(MoreObjects.firstNonNull(user.getBiography(), fullName + " on Instagram"));
 
-		channel.setLink(user.getProfileUri().toString());
-		channel.setTitle(user.getFullName());
-		channel.setWebMaster("ben@aldaviva.com (Ben Hutchison)");
+        channel.setLink(user.getProfileUri().toString());
+        channel.setTitle(fullName);
+        channel.setWebMaster("ben@aldaviva.com (Ben Hutchison)");
 
-		final Image channelImage = new Image();
-		channelImage.setUrl(user.getProfilePicture().toString());
-		channelImage.setTitle(channel.getTitle());
-		channelImage.setWidth(null);
-		channelImage.setHeight(null);
-		channelImage.setLink(channel.getLink());
-		channel.setImage(channelImage);
+        final Image channelImage = new Image();
+        channelImage.setUrl(user.getProfilePicture().toString());
+        channelImage.setTitle(channel.getTitle());
+        channelImage.setWidth(null);
+        channelImage.setHeight(null);
+        channelImage.setLink(channel.getLink());
+        channel.setImage(channelImage);
 
-		DateTime latestPostDate = null;
+        DateTime latestPostDate = null;
 
-		for(final InstagramPost post : user.getPosts()) {
-			final Item item = new Item();
-			channel.getItems().add(item);
+        for (final InstagramPost post : user.getPosts()) {
+            final Item item = new Item();
+            channel.getItems().add(item);
 
-			item.setTitle(post.getCaption());
-			item.setLink(post.getPostUri().toString());
-			item.setPubDate(post.getDatePosted().toDate());
+            item.setTitle(post.getCaption());
+            item.setLink(post.getPostUri().toString());
+            item.setPubDate(post.getDatePosted().toDate());
 
-			final DCModule dc = new DCModuleImpl();
-			dc.setCreator(user.getFullName());
-			item.getModules().add(dc);
+            final DCModule dc = new DCModuleImpl();
+            dc.setCreator(user.getFullName());
+            item.getModules().add(dc);
 
-			final Description description = new Description();
-			description.setValue(XML_OUTPUTTER.outputString(post.toHtmlElement()));
-			item.setDescription(description);
+            final Description description = new Description();
+            description.setValue(XML_OUTPUTTER.outputString(post.toHtmlElement()));
+            item.setDescription(description);
 
-			final Guid guid = new Guid();
-			guid.setValue(post.getPostUri().toString());
-			guid.setPermaLink(true);
-			item.setGuid(guid);
+            final Guid guid = new Guid();
+            guid.setValue(post.getPostUri().toString());
+            guid.setPermaLink(true);
+            item.setGuid(guid);
 
-			if(latestPostDate == null) {
-				latestPostDate = post.getDatePosted();
-			} else {
-				latestPostDate = Ordering.natural().max(latestPostDate, post.getDatePosted());
-			}
-		}
+            if (latestPostDate == null) {
+                latestPostDate = post.getDatePosted();
+            } else {
+                latestPostDate = Ordering.natural().max(latestPostDate, post.getDatePosted());
+            }
+        }
 
-		if(latestPostDate != null) {
-			channel.setLastBuildDate(latestPostDate.toDate());
-			channel.setPubDate(latestPostDate.toDate());
-		}
+        if (latestPostDate != null) {
+            channel.setLastBuildDate(latestPostDate.toDate());
+            channel.setPubDate(latestPostDate.toDate());
+        }
 
-		return channel;
-	}
+        return channel;
+    }
 
 }
