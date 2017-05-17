@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.aldaviva</groupId>
+	<groupId>com.aldaviva.feeds</groupId>
 	<artifactId>instagram_rss</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 	<name>Instagram RSS</name>
 	<description>Convert an Instagram profile into an RSS feed.</description>
 	<packaging>war</packaging>
@@ -202,6 +202,7 @@
 			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
 			<artifactId>jersey-test-framework-provider-grizzly2</artifactId>
 			<version>${jersey.version}</version>
+			<scope>test</scope>
 		</dependency>
     </dependencies>
 
