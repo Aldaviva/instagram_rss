@@ -3,6 +3,7 @@ package com.aldaviva.feeds.instagram_rss.data;
 import java.net.URI;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.jdom2.Element;
+import org.springframework.beans.BeanUtils;
 
 @XmlRootElement
 public class InstagramVideoPost extends InstagramPhotoPost {
@@ -15,6 +16,12 @@ public class InstagramVideoPost extends InstagramPhotoPost {
 
 	public void setVideoUri(final URI videoUri) {
 		this.videoUri = videoUri;
+	}
+
+	public static InstagramVideoPost fromPhotoPost(final InstagramPhotoPost photoPost) {
+		final InstagramVideoPost videoPost = new InstagramVideoPost();
+		BeanUtils.copyProperties(photoPost, videoPost);
+		return videoPost;
 	}
 
 	@Override

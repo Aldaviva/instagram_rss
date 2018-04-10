@@ -1,10 +1,8 @@
 package com.aldaviva.feeds.instagram_rss.service.instagram;
 
 import com.aldaviva.feeds.instagram_rss.common.exceptions.InstagramException;
-import com.aldaviva.feeds.instagram_rss.data.InstagramPhotoPost;
 import com.aldaviva.feeds.instagram_rss.data.InstagramPost;
 import com.aldaviva.feeds.instagram_rss.data.InstagramUser;
-import com.aldaviva.feeds.instagram_rss.data.InstagramVideoPost;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +16,6 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response.Status;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +26,8 @@ public class InstagramServiceImpl implements InstagramService {
 
 	@Autowired private Provider<Client> httpClient;
 	@Autowired private ObjectMapper objectMapper;
+	@Autowired private PhotoPostReader photoPostReader; //might need concrete classes or more interfaces to inject correct type due to erasure
+	@Autowired private VideoPostReader videoPostReader;
 
 	@Override
 	public InstagramUser getUser(final String username) throws InstagramException {
@@ -41,13 +40,15 @@ public class InstagramServiceImpl implements InstagramService {
 
 			LOGGER.trace("Downloaded profile, extracting...");
 
-			final Pattern pattern = Pattern.compile(".*window\\._sharedData = (.*);.*", Pattern.DOTALL);
+			final Pattern pattern = Pattern.compile(".*window\\._sharedData = (.*?);</script>.*", Pattern.DOTALL);
 			final Matcher matcher = pattern.matcher(response);
 			if(matcher.matches()) {
 				final String sharedDataText = matcher.group(1);
-				LOGGER.trace("Extracted profile, parsing...");
+				LOGGER.debug("Extracted profile, parsing...");
+				LOGGER.trace("Shared data text: {}", sharedDataText);
 				final JsonNode sharedData = objectMapper.readTree(sharedDataText);
-				LOGGER.trace("Got profile for user {}.", username);
+				LOGGER.debug("Got profile for user {}", username);
+				LOGGER.trace("Parsed profile: {}", sharedData);
 				return convertSharedDataToUser(sharedData);
 			} else {
 				throw new InstagramException("No sharedData returned for user " + username);
@@ -67,15 +68,15 @@ public class InstagramServiceImpl implements InstagramService {
 
 	protected InstagramUser convertSharedDataToUser(final JsonNode sharedData) throws InstagramException {
 		final InstagramUser user = new InstagramUser();
-		final JsonNode rawUser = sharedData.path("entry_data").path("ProfilePage").get(0).path("user");
+		final JsonNode rawUser = sharedData.path("entry_data").path("ProfilePage").get(0).get("graphql").path("user");
 
-		user.setBiography(rawUser.path("biography").textValue());
-		user.setCsrfToken(sharedData.path("config").path("csrf_token").textValue());
-		user.setFullName(rawUser.path("full_name").textValue());
-		user.setUserId(rawUser.path("id").asLong());
-		user.setUsername(rawUser.path("username").textValue());
+		user.setBiography(rawUser.get("biography").textValue());
+		user.setCsrfToken(sharedData.get("config").get("csrf_token").textValue());
+		user.setFullName(rawUser.get("full_name").textValue());
+		user.setUserId(rawUser.get("id").asLong());
+		user.setUsername(rawUser.get("username").textValue());
 
-		if(rawUser.path("is_private").booleanValue()) {
+		if(rawUser.get("is_private").booleanValue()) {
 			throw new InstagramException.PrivateProfile(user.getUsername(), "Unable to retrieve profile of private user " + user.getUsername());
 		}
 
@@ -89,65 +90,23 @@ public class InstagramServiceImpl implements InstagramService {
 			}
 		}
 
-		final JsonNode mediaNodes = rawUser.path("media").path("nodes");
+		final JsonNode mediaNodes = rawUser.path("edge_owner_to_timeline_media").path("edges");
 		for(final JsonNode mediaNode : mediaNodes) {
-			user.getPosts().add(convertMediaNodeToPost(mediaNode, user));
+			user.getPosts().add(convertMediaNodeToPost(mediaNode.get("node"), user));
 		}
 
 		return user;
 	}
 
 	protected InstagramPost convertMediaNodeToPost(final JsonNode rawPost, final InstagramUser user) throws InstagramException {
-		final InstagramPost post;
+		PostReader<?> postReader;
 		if(rawPost.path("is_video").booleanValue()) {
-			post = populatePostDetails(rawPost, new InstagramVideoPost(), user);
+			postReader = videoPostReader;
 		} else {
-			post = populatePostDetails(rawPost, new InstagramPhotoPost(), user);
+			postReader = photoPostReader;
 		}
 
-		return post;
-	}
-
-	protected InstagramPhotoPost populatePostDetails(final JsonNode rawPost, final InstagramPhotoPost post, final InstagramUser user)
-	    throws InstagramException {
-		post.setCaption(rawPost.path("caption").textValue());
-		post.setDatePosted(new DateTime(rawPost.path("date").asLong() * 1000));
-		post.setHeight(rawPost.path("dimensions").path("height").intValue());
-		post.setWidth(rawPost.path("dimensions").path("width").intValue());
-		post.setId(rawPost.path("id").asLong());
-		post.setOwnerId(rawPost.path("owner").path("id").asLong());
-		post.setCode(rawPost.path("code").textValue());
-
-		try {
-			post.setDisplaySource(new URI(rawPost.path("display_src").textValue()));
-			post.setThumbnailSource(new URI(rawPost.path("thumbnail_src").textValue()));
-		} catch (final URISyntaxException e) {
-			throw new InstagramException("Illegal display or thumbnail URL for " + user.getUsername() + "'s post " + post.getPostUri(), e);
-		}
-
-		return post;
-	}
-
-	protected InstagramVideoPost populatePostDetails(final JsonNode rawPost, final InstagramVideoPost post, final InstagramUser user)
-	    throws InstagramException {
-		populatePostDetails(rawPost, (InstagramPhotoPost) post, user);
-
-		try {
-			final JsonNode videoDetails = httpClient.get().target(BASE_URI)
-			    .path("p")
-			    .path(post.getCode())
-			    .queryParam("__a", 1) //otherwise Instagram returns HTML
-			    .request()
-			    .get(JsonNode.class);
-
-			post.setVideoUri(new URI(videoDetails.path("graphql").path("shortcode_media").path("video_url").textValue()));
-		} catch (final URISyntaxException e) {
-			throw new InstagramException("Illegal video URL for " + user.getUsername() + "'s post " + post.getPostUri(), e);
-		} catch (WebApplicationException | ProcessingException e) {
-			throw new InstagramException("Could not get video info for user " + user.getUsername(), e);
-		}
-
-		return post;
+		return postReader.populatePostDetails(rawPost, user);
 	}
 
 }
